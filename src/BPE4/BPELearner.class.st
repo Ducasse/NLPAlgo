@@ -89,6 +89,12 @@ BPELearner >> extractPairAndPositionFrom: aNode [
 	^pairAndPosition
 ]
 
+{ #category : 'merges' }
+BPELearner >> findPairToMerge [
+
+	^ pairs sortedCounts first value
+]
+
 { #category : 'public API' }
 BPELearner >> fromText: aText [
 
@@ -120,11 +126,11 @@ BPELearner >> merges [
 ]
 
 { #category : 'merges' }
-BPELearner >> mergesOneStep [ 
-	
+BPELearner >> mergesOneStep [
+
 	| pair vocabulaire |
-	pair := pairs sortedCounts first value.
-	vocabulaire:= pair first , pair second.
+	pair := self findPairToMerge.
+	vocabulaire := pair first , pair second.
 	self addToMergesPair: pair mergedInto: vocabulaire.
 	self addToVocabulary: vocabulaire.
 	self update: pair
