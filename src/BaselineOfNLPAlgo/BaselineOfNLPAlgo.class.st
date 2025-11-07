@@ -12,7 +12,9 @@ BaselineOfNLPAlgo >> baseline: spec [
 			spec
 				package: #'BPE4'.
 			spec
-				group: 'Core' with: #( 'BPE4' );
+				package: #'WordPiece'.
+			spec
+				group: 'Core' with: #( 'BPE4' 'WordPiece' );
 				group: 'default'
-				with: #( 'BPE4' ) ]
+				with: #( 'BPE4' 'WordPiece') ]
 ]
