@@ -19,17 +19,19 @@ Subword class >> subword: aString occurence: anInteger [
 ]
 
 { #category : 'build' }
-Subword >> buildPairFrom: aNode in: aBPE [
-"création d'une paire à partir d'un noeud et ajout du paire créée dans l'objet aBPE"
-	aNode ifNil: [ ^ self ].
-	aNode value buildPairWith: aNode in: aBPE .	
+Subword >> buildPairFrom: aLink in: aBPE [
+	"création d'une paire à partir d'un link et ajout du paire créée dans l'objet aBPE"
+	
+	aLink ifNil: [ ^ self ].
+	aLink value buildPairWith: aLink in: aBPE	
 	
 ]
 
 { #category : 'build' }
-Subword >> buildPairWith: aNode in: aBPE [
-"Construit et enregistre dans le BPE la paire formée à partir du nœud donné, ainsi que sa position dans la liste chaînée."
-	aBPE collectPairFrom: aNode .
+Subword >> buildPairWith: aLink in: aBPE [
+	"Construit et enregistre dans le BPE la paire formée à partir du nœud donné, ainsi que sa position dans la liste chaînée."
+	
+	aBPE collectPairFrom: aLink
 	
 ]
 

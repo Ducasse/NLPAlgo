@@ -19,7 +19,7 @@ EndOfWord >> buildPairFrom: aNode in: aBPE [
 ]
 
 { #category : 'build' }
-EndOfWord >> buildPairWith: aNode in: aBPE [
+EndOfWord >> buildPairWith: aLink in: aBPE [
 	^self
 ]
 

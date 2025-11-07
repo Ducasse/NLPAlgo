@@ -5,8 +5,8 @@ Class {
 	#package : 'BPE4'
 }
 
-{ #category : 'private' }
-TestBPELearner >> array [ 
+{ #category : 'ressources' }
+TestBPELearner >> rawCorpus [ 
 	^ {'old' . 'old' . 'old' . 'old' . 'old' . 'old' . 'old' . 'older' . 'older' . 'older' . 'finest' . 'finest' . 'finest' . 'finest' . 'finest' . 'finest' . 'finest' . 'finest' . 'finest' . 'lowest' . 'lowest' . 'lowest' . 'lowest'}
 ]
 
@@ -26,7 +26,7 @@ TestBPELearner >> testBuildVocabularyProducesCorrectVocabularyFromArray [
 
 	| enc |
 	enc := BPELearner new. 
-	enc fromText: self array .
+	enc fromText: self rawCorpus .
 	self 
 		assertCollection: enc vocabulary asSet
 		hasSameElements: { '</t>' . 'd' . 'e' . 'i' . 'l' . 'f' . 'n' . 'o' . 'r' . 's' . 't' . 'w'} asSet
@@ -49,15 +49,16 @@ TestBPELearner >> testComputePairs [
 	enc := BPELearner new. 
 	enc fromText: self text.
 	
-	self assert: (enc paires occurrencesOf: {'o' . 'l'}) equals: 10. 
-	self assert: (enc paires occurrencesOf: {'l' . 'd'}) equals: 10. 
-	self assert: (enc paires occurrencesOf: {'l' .'d'}) equals: 10. 
-	self assert: (enc paires occurrencesOf: {'s' .'t'}) equals: 13. 
-	self assert: (enc paires occurrencesOf: {'e' . 's'}) equals: 13. 
-	self assert: (enc paires occurrencesOf: {'l' .'o'}) equals: 4. 
-	self assert: (enc paires occurrencesOf: {'t' . '</t>'}) equals: 13. 
+	self assert: (enc pairs occurrencesOf: {'o' . 'l'}) equals: 10. 
+	self assert: (enc pairs occurrencesOf: {'l' . 'd'}) equals: 10. 
+	self assert: (enc pairs occurrencesOf: {'l' .'d'}) equals: 10. 
+	self assert: (enc pairs occurrencesOf: {'s' .'t'}) equals: 13. 
+	self assert: (enc pairs occurrencesOf: {'e' . 's'}) equals: 13. 
+	self assert: (enc pairs occurrencesOf: {'l' .'o'}) equals: 4. 
+	self assert: (enc pairs occurrencesOf: {'t' . '</t>'}) equals: 13. 
 	
-	self assert: enc paires keys size equals: 15
+	self assert: enc pairs size equals: 114.
+	self assert: enc pairs keys size equals: 15
 ]
 
 { #category : 'tests' }
@@ -65,17 +66,17 @@ TestBPELearner >> testComputePairsArray [
 
 	| enc |
 	enc := BPELearner new. 
-	enc fromText: self array .
+	enc fromText: self rawCorpus .
 	
-	self assert: (enc paires occurrencesOf: {'o' . 'l'}) equals: 10. 
-	self assert: (enc paires occurrencesOf: {'l' . 'd'}) equals: 10. 
-	self assert: (enc paires occurrencesOf: {'l' .'d'}) equals: 10. 
-	self assert: (enc paires occurrencesOf: {'s' .'t'}) equals: 13. 
-	self assert: (enc paires occurrencesOf: {'e' . 's'}) equals: 13. 
-	self assert: (enc paires occurrencesOf: {'l' .'o'}) equals: 4. 
-	self assert: (enc paires occurrencesOf: {'t' . '</t>'}) equals: 13. 
+	self assert: (enc pairs occurrencesOf: {'o' . 'l'}) equals: 10. 
+	self assert: (enc pairs occurrencesOf: {'l' . 'd'}) equals: 10. 
+	self assert: (enc pairs occurrencesOf: {'l' .'d'}) equals: 10. 
+	self assert: (enc pairs occurrencesOf: {'s' .'t'}) equals: 13. 
+	self assert: (enc pairs occurrencesOf: {'e' . 's'}) equals: 13. 
+	self assert: (enc pairs occurrencesOf: {'l' .'o'}) equals: 4. 
+	self assert: (enc pairs occurrencesOf: {'t' . '</t>'}) equals: 13. 
 	
-	self assert: enc paires keys size equals: 15
+	self assert: enc pairs keys size equals: 15
 ]
 
 { #category : 'tests' }
@@ -85,16 +86,16 @@ TestBPELearner >> testComputePairsText2 [
 	enc := BPELearner new. 
 	enc fromText: self text2.
 	
-	self assert: (enc paires occurrencesOf: {'e' .'s'}) equals: 9. 
-	self assert: (enc paires occurrencesOf: {'i'. 'd'}) equals: 3. 
-	self assert: (enc paires occurrencesOf: {'o' .'w'}) equals: 7. 
-	self assert: (enc paires occurrencesOf: {'s'. 't'}) equals: 9. 
-	self assert: (enc paires occurrencesOf: {'w'. 'e'}) equals: 8. 
-	self assert: (enc paires occurrencesOf: {'w'. 'i'}) equals: 3. 
-	self assert: (enc paires occurrencesOf: {'t'.'</t>'}) equals: 9. 
+	self assert: (enc pairs occurrencesOf: {'e' .'s'}) equals: 9. 
+	self assert: (enc pairs occurrencesOf: {'i'. 'd'}) equals: 3. 
+	self assert: (enc pairs occurrencesOf: {'o' .'w'}) equals: 7. 
+	self assert: (enc pairs occurrencesOf: {'s'. 't'}) equals: 9. 
+	self assert: (enc pairs occurrencesOf: {'w'. 'e'}) equals: 8. 
+	self assert: (enc pairs occurrencesOf: {'w'. 'i'}) equals: 3. 
+	self assert: (enc pairs occurrencesOf: {'t'.'</t>'}) equals: 9. 
 
 	 "#('lo' 't_' 'er' 'r_' 'st' 'wi' 'es' 'ne' 'ow' 'we' 'w_' 'id' 'de' 'ew')"
-	self assert: enc paires keys size equals: 14
+	self assert: enc pairs keys size equals: 14
 ]
 
 { #category : 'tests' }
@@ -134,14 +135,34 @@ TestBPELearner >> testMergeOneStepRecomputePairs [
 	
 	enc mergesOneStep .
 	
-	self assert: (enc paires occurrencesOf: {'o' . 'l'}) equals: 10. 
-	self assert: (enc paires occurrencesOf: {'l' . 'd'}) equals: 10. 
-	self assert: (enc paires occurrencesOf: {'l' .'d'}) equals: 10. 
-	self assert: (enc paires occurrencesOf: {'s' . 't</t>'}) equals: 13. 
-	self assert: (enc paires occurrencesOf: {'l' .'o'}) equals: 4. 
-	self assert: (enc paires occurrencesOf: {'e' . 's'}) equals: 13. 
-	self assert: (enc paires occurrencesOf: {'w' . 'e'}) equals: 4. 
-	self assert: (enc paires occurrencesOf: {'n' . 'e'}) equals: 9. 
+	self assert: (enc pairs occurrencesOf: {'o' . 'l'}) equals: 10. 
+	self assert: (enc pairs occurrencesOf: {'l' . 'd'}) equals: 10. 
+	self assert: (enc pairs occurrencesOf: {'l' .'d'}) equals: 10. 
+	self assert: (enc pairs occurrencesOf: {'s' . 't</t>'}) equals: 13. 
+	self assert: (enc pairs occurrencesOf: {'l' .'o'}) equals: 4. 
+	self assert: (enc pairs occurrencesOf: {'e' . 's'}) equals: 13. 
+	self assert: (enc pairs occurrencesOf: {'w' . 'e'}) equals: 4. 
+	self assert: (enc pairs occurrencesOf: {'n' . 'e'}) equals: 9. 
+]
+
+{ #category : 'test - tokenisation' }
+TestBPELearner >> testPrepareFrom [
+
+	| bpeLearner b |
+	bpeLearner := BPELearner new.
+	b := bpeLearner prepareWordsFrom: self rawCorpus.
+	self assert: b class equals: Bag.
+	self flag: #betterTest
+]
+
+{ #category : 'test - tokenisation' }
+TestBPELearner >> testPrepareFromText [
+
+	| bpeLearner b |
+	bpeLearner := BPELearner new.
+	b := bpeLearner prepareWordsFromText: self text.
+	self assert: b class equals: Bag.
+	self flag: #betterTest
 ]
 
 { #category : 'tests' }
@@ -158,7 +179,7 @@ TestBPELearner >> testTwoMerges [
 	self assert: enc merges second equals: #('e' 's')->'es'. 
 ]
 
-{ #category : 'accessing' }
+{ #category : 'ressources' }
 TestBPELearner >> text [
 	^ 'old old old old old old old 
 older older older
@@ -167,7 +188,7 @@ lowest lowest lowest lowest
 '
 ]
 
-{ #category : 'accessing structure variables' }
+{ #category : 'ressources' }
 TestBPELearner >> text2 [
 	^ '
 low low low low low

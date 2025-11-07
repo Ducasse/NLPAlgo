@@ -3,39 +3,44 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'words',
-		'pairesPosition',
-		'tokens'
+		'tokens',
+		'pairPositions'
 	],
 	#category : 'BPE4',
 	#package : 'BPE4'
 }
 
 { #category : 'adding' }
-BPEApplier >> addToPairesPosition: anAssociation [
-"Ajoute la position associée à une paire dans le dictionnaire des positions."
-	self pairesPosition at: anAssociation key update: [:set| set add: anAssociation value; yourself ] initial: (Set with: anAssociation value) 
+BPEApplier >> addToPairsPosition: aPair [
+	"Ajoute la position associée à une paire dans le dictionnaire des positions."
+
+	pairPositions 
+		at: aPair key 
+		update: [ :set| set add: aPair value; yourself ] 
+		initial: (Set with: aPair value) 
 ]
 
 { #category : 'apply' }
 BPEApplier >> applyRulesFrom:aBPE [
 	|merges|
 	merges := aBPE merges.
-	merges do: [ :each| (self pairesPosition includesKey: each key) ifTrue: [ self update: each key ] ]
+	merges do: [ :each| (self pairPositions includesKey: each key) ifTrue: [ self update: each key ] ]
 ]
 
 { #category : 'nodes' }
 BPEApplier >> collectPairFrom: aNode [
-	self addToPairesPosition: (self extractPairAndPositionFrom: aNode )
+	self addToPairsPosition: (self extractPairAndPositionFrom: aNode )
 ]
 
 { #category : 'adding' }
 BPEApplier >> computePairs [
-"Parcours la liste chaînée des mots pour construire toutes les paires possibles."
-	|current|
-	current := self words firstLink .
-	[current nextLink notNil ] whileTrue: [
-		current nextLink value buildPairFrom: current in: self .
-		current := current nextLink .
+	"Parcours la liste chaînée des mots pour construire toutes les paires possibles."
+	
+	| current |
+	current := self words firstLink.
+	[ current nextLink notNil ] whileTrue: [
+		current nextLink value buildPairFrom: current in: self.
+		current := current nextLink.
 		].
 ]
 
@@ -64,28 +69,24 @@ BPEApplier >> fusion: anArray [
 BPEApplier >> initialize [ 
 	super initialize .
 	words := DoubleLinkedList new.
-	pairesPosition := Dictionary new.
+	pairPositions := Dictionary new.
 	tokens := Bag new .
 ]
 
 { #category : 'accessing' }
-BPEApplier >> pairesPosition [ 
-	^pairesPosition 
+BPEApplier >> pairPositions [ 
+	^ pairPositions 
 ]
 
 { #category : 'pretokenisation' }
-BPEApplier >> prepareWordrsFrom: anObject [
-	|bag |
-	(anObject isArray ) ifTrue: [ bag :=self prepareWordsFromArray:anObject ].
-	(anObject isString ) ifTrue: [ bag := self pretokenization: anObject ].
-	^bag
-]
+BPEApplier >> prepareWordsFrom: anObject [
 
-{ #category : 'pretokenisation' }
-BPEApplier >> prepareWordsFromArray:anArray [
-	|bag|
-	bag := anArray asBag .
-	^bag 
+	| bag |
+	anObject isArray ifTrue: [
+		bag := anObject asBag ].
+	anObject isString ifTrue: [ 
+		bag := self pretokenization: anObject ].
+	^ bag
 ]
 
 { #category : 'accessing' }
@@ -120,9 +121,10 @@ BPEApplier >> tokens [
 
 { #category : 'update' }
 BPEApplier >> update: anArray [
-"Met à jour toutes les occurrences, les positions d’une paire donnée et ses voisines dans la liste chaînée, effectue la fusion, et ajout de nouvelles paires."
-	|position|
-	position := self pairesPosition at: anArray .
+	"Met à jour toutes les occurrences, les positions d’une paire donnée et ses voisines dans la liste     chaînée, effectue la fusion, et ajout de nouvelles paires."
+	
+	| position |
+	position := pairPositions at: anArray.
 	position do: [ :each|
 		each first value updatePairFromNode: each first previousLink in: self.
 		each second nextLink value updatePairFromNode: each second in: self.
@@ -130,19 +132,19 @@ BPEApplier >> update: anArray [
 		each first value buildPairFrom: each first previousLink in: self.
 		each first nextLink value buildPairFrom: each first in: self.
 		].
-	self pairesPosition removeKey: anArray ifAbsent: [  ].
+	self pairPositions removeKey: anArray ifAbsent: [  ].
 ]
 
 { #category : 'update' }
 BPEApplier >> updatePairFrom: aNode [
-	self updatePairesPosition: (self extractPairAndPositionFrom: aNode )
+	self updatePairPositionsWith: (self extractPairAndPositionFrom: aNode )
 ]
 
 { #category : 'update' }
-BPEApplier >> updatePairesPosition: anAssociation [
+BPEApplier >> updatePairPositionsWith: anAssociation [
 "Supprime les positions associées à une paire et supprime la clé dans la dictionnaire pairesPosition si l'ensemble des positions est vides."
-	self pairesPosition at: anAssociation key update: [:set| set remove: anAssociation value ifAbsent:[] ; yourself ].
-	(self pairesPosition at: anAssociation key)size =0 ifTrue: [ self pairesPosition removeKey: anAssociation key ]
+	self pairPositions at: anAssociation key update: [:set| set remove: anAssociation value ifAbsent:[] ; yourself ].
+	(self pairPositions at: anAssociation key)size =0 ifTrue: [ self pairPositions removeKey: anAssociation key ]
 ]
 
 { #category : 'accessing' }
@@ -153,7 +155,7 @@ BPEApplier >> words [
 { #category : 'adding' }
 BPEApplier >> words: anObject [
 	|text|
-	text:=self prepareWordrsFrom: anObject .
+	text:=self prepareWordsFrom: anObject .
 	text associationsDo: [ :each|
 			each key do:[:char|
 			words add: (Subword subword: char asString occurence: each value)].

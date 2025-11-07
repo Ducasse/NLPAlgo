@@ -3,10 +3,10 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'words',
-		'paires',
-		'pairesPosition',
 		'vocabulary',
-		'merges'
+		'merges',
+		'pairs',
+		'pairPositions'
 	],
 	#category : 'BPE4',
 	#package : 'BPE4'
@@ -14,30 +14,38 @@ Class {
 
 { #category : 'adding' }
 BPELearner >> addToMergesPair: aCollection mergedInto: aString [
+
 	merges add: aCollection -> aString
 ]
 
 { #category : 'adding' }
-BPELearner >> addToPaires: anAssociation [
-"Ajoute la paire donnée et son nombre d’occurrences au dictionnaire des paires."
-	self paires add: anAssociation key withOccurrences: anAssociation value .
+BPELearner >> addToPairs: aPair [
+	"Add the pair to the pair dictionary (it keeps the pair occurrences)."
+	
+	pairs add: aPair key withOccurrences: aPair value
 ]
 
 { #category : 'adding' }
-BPELearner >> addToPairesPosition: anAssociation [
-"Ajoute la position associée à une paire dans le dictionnaire des positions."
-	self pairesPosition at: anAssociation key update: [:set| set add: anAssociation value; yourself ] initial: (Set with: anAssociation value) 
+BPELearner >> addToPairsPosition: aPair [
+	"Ajoute la position associée à une paire dans le dictionnaire des positions."
+	
+	self pairPositions 
+		at: aPair key 
+		update: [ :set| set add: aPair value; yourself ] 
+		initial: (Set with: aPair value) 
 ]
 
 { #category : 'adding' }
 BPELearner >> addToVocabulary: aString [
+
 	vocabulary add: aString 
 ]
 
 { #category : 'nodes' }
 BPELearner >> collectPairFrom: aNode [
-	self addToPaires: (self extractPairAndOccurencesFrom: aNode) .
-	self addToPairesPosition: (self extractPairAndPositionFrom: aNode )
+
+	self addToPairs: (self extractPairAndOccurencesFrom: aNode).
+	self addToPairsPosition: (self extractPairAndPositionFrom: aNode )
 ]
 
 { #category : 'adding' }
@@ -81,10 +89,11 @@ BPELearner >> extractPairAndPositionFrom: aNode [
 	^pairAndPosition
 ]
 
-{ #category : 'instance creation' }
+{ #category : 'public API' }
 BPELearner >> fromText: aText [
-	self words: aText .
-	self computeVocabulary .
+
+	self words: aText.
+	self computeVocabulary.
 	self computePairs 
 ]
 
@@ -95,14 +104,14 @@ BPELearner >> fusion: anArray [
 	words removeLink: anArray second .
 ]
 
-{ #category : 'initalize' }
+{ #category : 'initalization' }
 BPELearner >> initialize [ 
 	super initialize. 
-	words :=DoubleLinkedList new.
+	words := DoubleLinkedList new.
 	vocabulary := Set new.
-	paires := Bag new .
-	pairesPosition := Dictionary new.
-	merges:= OrderedCollection new .
+	pairs := Bag new .
+	pairPositions := Dictionary new.
+	merges:= OrderedCollection new
 ]
 
 { #category : 'accessing' }
@@ -112,39 +121,44 @@ BPELearner >> merges [
 
 { #category : 'merges' }
 BPELearner >> mergesOneStep [ 
-	|paire vocabulaire|
-	paire :=self paires sortedCounts first value..
-	vocabulaire:= paire first , paire second.
-	self addToMergesPair: paire mergedInto: vocabulaire .
-	self addToVocabulary: vocabulaire .
-	self update: paire .
+	
+	| pair vocabulaire |
+	pair := pairs sortedCounts first value.
+	vocabulaire:= pair first , pair second.
+	self addToMergesPair: pair mergedInto: vocabulaire.
+	self addToVocabulary: vocabulaire.
+	self update: pair
 ]
 
 { #category : 'accessing' }
-BPELearner >> paires [ 
-"Renvoie un dictionnaire dont les clés sont les paires et les valeurs sont leur occurrence."
-	^paires 
+BPELearner >> pairPositions [ 
+	"Renvoie le dictionnaire dont les cles sont les paires et les valeurs sont un ensemble de positions des paires dans la liste chaînée."
+
+	^ pairPositions 
 ]
 
 { #category : 'accessing' }
-BPELearner >> pairesPosition [ 
-"Renvoie le dictionnaire dont les cles sont les paires et les valeurs sont un ensemble de positions des paires dans la liste chaînée."
-	^pairesPosition 
+BPELearner >> pairs [ 
+	"Return the bags of pairs."
+	
+	^pairs 
 ]
 
 { #category : 'pretokenisation' }
-BPELearner >> prepareWordrsFrom: anObject [
-	|bag |
-	(anObject isArray ) ifTrue: [ bag :=self prepareWordsFromArray:anObject ].
-	(anObject isString ) ifTrue: [ bag := self pretokenization: anObject ].
-	^bag 
+BPELearner >> prepareWordsFrom: anObject [
+
+	| bag |
+	anObject isArray ifTrue: [
+		bag := anObject asBag ].
+	anObject isString ifTrue: [ 
+		bag := self pretokenization: anObject ].
+	^ bag
 ]
 
 { #category : 'pretokenisation' }
-BPELearner >> prepareWordsFromArray:anArray [
-	|bag|
-	bag := anArray asBag .
-	^bag 
+BPELearner >> prepareWordsFromText: anObject [
+
+	^ self pretokenization: anObject
 ]
 
 { #category : 'pretokenisation' }
@@ -164,38 +178,55 @@ BPELearner >> pretokenization:aText [
 
 { #category : 'update' }
 BPELearner >> update: anArray [
-"Met à jour toutes les occurrences, les positions d’une paire donnée et ses voisines dans la liste chaînée, effectue la fusion, et ajout de nouvelles paires."
-	|position|
-	position := self pairesPosition at: anArray .
-	position do: [ :each|
-		each first value updatePairFromNode: each first previousLink in: self.
-		each second nextLink value updatePairFromNode: each second in: self.
-		self fusion: each .
-		each first value buildPairFrom: each first previousLink in: self.
-		each first nextLink value buildPairFrom: each first in: self.
-		].
-	self paires removeKey: anArray ifAbsent: [  ].
-	self pairesPosition removeKey: anArray ifAbsent: [  ].
+	"Met à jour toutes les occurrences, les positions d’une paire donnée et ses voisines dans la liste chaînée, effectue la fusion, et ajout de nouvelles paires."
+
+	| position |
+	position := pairPositions at: anArray.
+	position do: [ :each |
+			each first value
+				updatePairFromNode: each first previousLink
+				in: self.
+			each second nextLink value 
+				updatePairFromNode: each second 
+				in: self.
+			self fusion: each.
+			each first value 
+				buildPairFrom: each first previousLink 
+				in: self.
+			each first nextLink value 
+				buildPairFrom: each first 
+				in: self ].
+	pairs removeKey: anArray ifAbsent: [ ].
+	pairPositions removeKey: anArray ifAbsent: [ ]
 ]
 
 { #category : 'update' }
 BPELearner >> updatePairFrom: aNode [
-	self updatePaires: (self extractPairAndOccurencesFrom: aNode ).
-	self updatePairesPosition: (self extractPairAndPositionFrom: aNode )
+	self updatePairsWith: (self extractPairAndOccurencesFrom: aNode ).
+	self updatePairPositionsWith: (self extractPairAndPositionFrom: aNode )
 ]
 
 { #category : 'update' }
-BPELearner >> updatePaires: anAssociation [
-"Met à jour le nombre d’occurrences d’une paire dans le dictionnaire, et la supprime si son occurrence devient zéro."
-	self paires add: anAssociation key withOccurrences: anAssociation value negated .
-	(paires occurrencesOf: anAssociation key) = 0 ifTrue: [ paires removeKey: anAssociation key ifAbsent: []]
+BPELearner >> updatePairPositionsWith: anAssociation [
+	"Supprime les positions associées à une paire et supprime la clé dans la dictionnaire pairesPosition si l'ensemble des positions est vides."
+
+	pairPositions at: anAssociation key update: [ :set |
+			set
+				remove: anAssociation value ifAbsent: [ ];
+				yourself ].
+	(pairPositions at: anAssociation key) size = 0 ifTrue: [
+		pairPositions removeKey: anAssociation key ]
 ]
 
 { #category : 'update' }
-BPELearner >> updatePairesPosition: anAssociation [
-"Supprime les positions associées à une paire et supprime la clé dans la dictionnaire pairesPosition si l'ensemble des positions est vides."
-	self pairesPosition at: anAssociation key update: [:set| set remove: anAssociation value ifAbsent:[] ; yourself ].
-	(self pairesPosition at: anAssociation key)size =0 ifTrue: [ self pairesPosition removeKey: anAssociation key ]
+BPELearner >> updatePairsWith: anAssociation [
+	"Met à jour le nombre d’occurrences d’une paire dans le dictionnaire, et la supprime si son occurrence devient zéro."
+	
+	pairs 
+		add: anAssociation key 
+		withOccurrences: anAssociation value negated.
+	(pairs occurrencesOf: anAssociation key) = 0 
+		ifTrue: [ pairs removeKey: anAssociation key ifAbsent: []]
 ]
 
 { #category : 'accessing' }
@@ -210,12 +241,12 @@ BPELearner >> words [
 
 { #category : 'adding' }
 BPELearner >> words: anObject [
-	|text|
-	text:=self prepareWordrsFrom: anObject .
+	| text |
+	text:=self prepareWordsFrom: anObject.
 	text associationsDo: [ :each|
-			each key do:[:char|
-			words add: (Subword subword: char asString occurence: each value)].
+			each key do: [ :char |
+			words add: (Subword subword: char asString occurence: each value) ].
 		words add: (Subword subword: '</t>' occurence: each value).
 		words add: EndOfWord new ].
-	^words
+	^ words
 ]
