@@ -13,6 +13,26 @@ Class {
 }
 
 { #category : 'adding' }
+BPELearner >> addNewPairFrom: aSubword and: aSubword1 [
+
+"Ajout d'un nouveau pair formée par aSubword et aSubword1 dans pairs et pairPositions"
+
+	pairs add: { aSubword subword . aSubword1 subword } 
+			withOccurrences: aSubword occurence .
+			
+	pairPositions at: { aSubword subword . aSubword1 subword} 
+						update: [:set| set add: { aSubword position . aSubword1 position } ; yourself ] 
+						initial: (Set with: { aSubword position . aSubword1 position })
+]
+
+{ #category : 'adding' }
+BPELearner >> addToLettersAndLettersPositions: aSubword [
+
+"Ajoute un nouveau caractère ou chaîne de caractère dans letters et lettersPositions de WordPiece. Dans BPE, elle ne fait rien."
+	^self 
+]
+
+{ #category : 'adding' }
 BPELearner >> addToMergesPair: aCollection mergedInto: aString [
 
 	merges add: aCollection -> aString
@@ -54,7 +74,9 @@ BPELearner >> computePairs [
 	|current|
 	current := self words firstLink .
 	[current nextLink notNil ] whileTrue: [
-		current nextLink value buildPairFrom: current in: self .
+		current nextLink value 
+			tryAddPairWith: current value 
+			in: self.
 		current := current nextLink .
 		].
 
@@ -62,15 +84,27 @@ BPELearner >> computePairs [
 
 { #category : 'adding' }
 BPELearner >> computeVocabulary [ 
+
+"Parcours la liste chainée de mots pour construire le vocabulaire. Dans WordPiece, elle ajoute en même temps des éléments dans letters et lettersPositions"
 	|i|
 	i:=words firstLink .
 	[ i notNil ] whileTrue: [ 
 	[ i value class ~= EndOfWord ] whileTrue: [ 
-	vocabulary add: (i value subword ).
+		self addToVocabulary: (i value subword ).
+		self addToLettersAndLettersPositions: (i value).
 	i:= i nextLink 
 	 ].
 	i:= i nextLink 
 	 ]
+]
+
+{ #category : 'operations' }
+BPELearner >> createNewVocabulary: pair [
+"Crée un nouveau vocabulaire en concaténant les deux subwords de la paire donnée et le renvoie."
+
+	|newVocabulary|
+	newVocabulary := pair first , pair second.
+	^ newVocabulary 
 ]
 
 { #category : 'nodes' }
@@ -91,6 +125,7 @@ BPELearner >> extractPairAndPositionFrom: aNode [
 
 { #category : 'merges' }
 BPELearner >> findPairToMerge [
+"Cherche la paire ayant la fréquence maximale à fusionnée" 
 
 	^ pairs sortedCounts first value
 ]
@@ -128,11 +163,11 @@ BPELearner >> merges [
 { #category : 'merges' }
 BPELearner >> mergesOneStep [
 
-	| pair vocabulaire |
+	| pair newVocabulary |
 	pair := self findPairToMerge.
-	vocabulaire := pair first , pair second.
-	self addToMergesPair: pair mergedInto: vocabulaire.
-	self addToVocabulary: vocabulaire.
+	newVocabulary := self createNewVocabulary: pair .
+	self addToMergesPair: pair mergedInto: newVocabulary .
+	self addToVocabulary: newVocabulary .
 	self update: pair
 ]
 
@@ -182,34 +217,88 @@ BPELearner >> pretokenization:aText [
 	
 ]
 
-{ #category : 'update' }
-BPELearner >> update: anArray [
-	"Met à jour toutes les occurrences, les positions d’une paire donnée et ses voisines dans la liste chaînée, effectue la fusion, et ajout de nouvelles paires."
+{ #category : 'pretokenisation' }
+BPELearner >> pretokenize: anObject [
 
+	anObject isArray ifTrue: [ ^ self pretokenizeArrayOfSentences:anObject ].
+	anObject isString  ifTrue: [ ^ self pretokenizeText: anObject ].
+
+]
+
+{ #category : 'pretokenisation' }
+BPELearner >> pretokenizeArrayOfSentences: anArray [
+	|bag|
+	bag:= Bag new.
+	anArray do: [ :each | bag addAll: (self pretokenizeText: each ) ].
+	^ bag 
+]
+
+{ #category : 'pretokenisation' }
+BPELearner >> pretokenizeText:aText [
+"Transforme le texte en un bag de tokens en séparant les mots."
+	|rawWords bag|
+	bag := Bag new.
+	rawWords :=(aText substrings: {Character space . Character cr . Character tab}).
+	bag addAll: (rawWords collect: [:each|
+	self splitWord: each  ] ).
+	^bag 
+	
+]
+
+{ #category : 'operations' }
+BPELearner >> splitWord: aString [
+"Transforme la chaîne passée en argument en une collection de caractères (chaque caractère converti en chaîne), 
+et ajoute '</t>' à la fin."
+
+	|col|
+	col:=OrderedCollection new.
+	aString do: [ :aChar |
+		col add: aChar asString].
+	col add: '</t>'.
+	^ col 
+]
+
+{ #category : 'update' }
+BPELearner >> update: pair [
+	"Met à jour toutes les occurrences, les positions d’une paire donnée et ses voisines dans la liste chaînée, effectue la fusion, et ajout de nouvelles paires."
 	| position |
-	position := pairPositions at: anArray.
+	position := pairPositions at: pair.
 	position do: [ :each |
 			each first value
-				updatePairFromNode: each first previousLink
+				tryUpdatePairWith: each first previousLink value 
 				in: self.
 			each second nextLink value 
-				updatePairFromNode: each second 
+				tryUpdatePairWith: each second value 
 				in: self.
-			self fusion: each.
+			self fusion: each	.
 			each first value 
-				buildPairFrom: each first previousLink 
+				tryAddPairWith: each first previousLink value
 				in: self.
-			each first nextLink value 
-				buildPairFrom: each first 
-				in: self ].
-	pairs removeKey: anArray ifAbsent: [ ].
-	pairPositions removeKey: anArray ifAbsent: [ ]
+			each first nextLink value
+				tryAddPairWith: each first value 
+				in: self].
+	pairs removeKey: pair ifAbsent: [ ].
+	pairPositions removeKey: pair ifAbsent: [ ]
 ]
 
 { #category : 'update' }
 BPELearner >> updatePairFrom: aNode [
 	self updatePairsWith: (self extractPairAndOccurencesFrom: aNode ).
 	self updatePairPositionsWith: (self extractPairAndPositionFrom: aNode )
+]
+
+{ #category : 'update' }
+BPELearner >> updatePairFrom: aSubword and: aSubword1 [
+"Mises à jour de la paire formée par aSubword et aSubword1 dans pairs et pairsPositions"
+
+	pairs add: {aSubword subword . aSubword1 subword } 
+			withOccurrences: aSubword occurence negated .
+	(pairs occurrencesOf: {aSubword subword . aSubword1 subword }) = 0 ifTrue: [  pairs removeKey: {aSubword subword . aSubword1 subword } ifAbsent: []].
+	
+	pairPositions at: {aSubword subword . aSubword1 subword } 
+					update: [:set| set remove: {aSubword position . aSubword1 position } ifAbsent:[] ; yourself ].
+					
+	(pairPositions at: {aSubword subword . aSubword1 subword }) size = 0 ifTrue: [  pairPositions removeKey: {aSubword subword . aSubword1 subword }]
 ]
 
 { #category : 'update' }
@@ -248,11 +337,11 @@ BPELearner >> words [
 { #category : 'adding' }
 BPELearner >> words: anObject [
 	| text |
-	text:=self prepareWordsFrom: anObject.
+	text:=self pretokenize: anObject.
 	text associationsDo: [ :each|
 			each key do: [ :char |
-			words add: (Subword subword: char asString occurence: each value) ].
-		words add: (Subword subword: '</t>' occurence: each value).
+			words add: (Subword subword: char asString occurence: each value) .
+			words lastLink value position: words lastLink ].
 		words add: EndOfWord new ].
 	^ words
 ]
