@@ -39,33 +39,9 @@ BPELearner >> addToMergesPair: aCollection mergedInto: aString [
 ]
 
 { #category : 'adding' }
-BPELearner >> addToPairs: aPair [
-	"Add the pair to the pair dictionary (it keeps the pair occurrences)."
-	
-	pairs add: aPair key withOccurrences: aPair value
-]
-
-{ #category : 'adding' }
-BPELearner >> addToPairsPosition: aPair [
-	"Ajoute la position associée à une paire dans le dictionnaire des positions."
-	
-	self pairPositions 
-		at: aPair key 
-		update: [ :set| set add: aPair value; yourself ] 
-		initial: (Set with: aPair value) 
-]
-
-{ #category : 'adding' }
 BPELearner >> addToVocabulary: aString [
 
 	vocabulary add: aString 
-]
-
-{ #category : 'nodes' }
-BPELearner >> collectPairFrom: aNode [
-
-	self addToPairs: (self extractPairAndOccurencesFrom: aNode).
-	self addToPairsPosition: (self extractPairAndPositionFrom: aNode )
 ]
 
 { #category : 'adding' }
@@ -105,22 +81,6 @@ BPELearner >> createNewVocabulary: pair [
 	|newVocabulary|
 	newVocabulary := pair first , pair second.
 	^ newVocabulary 
-]
-
-{ #category : 'nodes' }
-BPELearner >> extractPairAndOccurencesFrom: aNode [
-"Construit et renvoie une association représentant la paire formée par le nœud donné et son suivant, ainsi que l’occurrence de la paire."
-	|pairAndOccurence|
-	pairAndOccurence := Association key: { aNode value subword . aNode nextLink value subword } value: aNode value occurence .
-	^pairAndOccurence 
-]
-
-{ #category : 'nodes' }
-BPELearner >> extractPairAndPositionFrom: aNode [
-"Construit et renvoie une association représentant la paire formée par le nœud donné et son suivant, ainsi que leurs références dans la liste chaînée."
-	|pairAndPosition |
-	pairAndPosition := Association key: { aNode value subword . aNode nextLink value subword } value: {aNode . aNode nextLink }.
-	^pairAndPosition
 ]
 
 { #category : 'merges' }
@@ -183,38 +143,6 @@ BPELearner >> pairs [
 	"Return the bags of pairs."
 	
 	^pairs 
-]
-
-{ #category : 'pretokenisation' }
-BPELearner >> prepareWordsFrom: anObject [
-
-	| bag |
-	anObject isArray ifTrue: [
-		bag := anObject asBag ].
-	anObject isString ifTrue: [ 
-		bag := self pretokenization: anObject ].
-	^ bag
-]
-
-{ #category : 'pretokenisation' }
-BPELearner >> prepareWordsFromText: anObject [
-
-	^ self pretokenization: anObject
-]
-
-{ #category : 'pretokenisation' }
-BPELearner >> pretokenization:aText [
-"Transforme le texte en un bag de tokens en séparant les mots."
-	|rawWords bag|
-	bag := Bag new.
-	rawWords :=(aText substrings: {Character space . Character cr . Character tab}).
-	bag addAll: (rawWords collect: [:each|
-		|col|
-		col:=OrderedCollection new: each size + 1 .
-		each do: [:aChar|col add: aChar asString].
-		col ] ).
-	^bag 
-	
 ]
 
 { #category : 'pretokenisation' }
@@ -282,12 +210,6 @@ BPELearner >> update: pair [
 ]
 
 { #category : 'update' }
-BPELearner >> updatePairFrom: aNode [
-	self updatePairsWith: (self extractPairAndOccurencesFrom: aNode ).
-	self updatePairPositionsWith: (self extractPairAndPositionFrom: aNode )
-]
-
-{ #category : 'update' }
 BPELearner >> updatePairFrom: aSubword and: aSubword1 [
 "Mises à jour de la paire formée par aSubword et aSubword1 dans pairs et pairsPositions"
 
@@ -299,29 +221,6 @@ BPELearner >> updatePairFrom: aSubword and: aSubword1 [
 					update: [:set| set remove: {aSubword position . aSubword1 position } ifAbsent:[] ; yourself ].
 					
 	(pairPositions at: {aSubword subword . aSubword1 subword }) size = 0 ifTrue: [  pairPositions removeKey: {aSubword subword . aSubword1 subword }]
-]
-
-{ #category : 'update' }
-BPELearner >> updatePairPositionsWith: anAssociation [
-	"Supprime les positions associées à une paire et supprime la clé dans la dictionnaire pairesPosition si l'ensemble des positions est vides."
-
-	pairPositions at: anAssociation key update: [ :set |
-			set
-				remove: anAssociation value ifAbsent: [ ];
-				yourself ].
-	(pairPositions at: anAssociation key) size = 0 ifTrue: [
-		pairPositions removeKey: anAssociation key ]
-]
-
-{ #category : 'update' }
-BPELearner >> updatePairsWith: anAssociation [
-	"Met à jour le nombre d’occurrences d’une paire dans le dictionnaire, et la supprime si son occurrence devient zéro."
-	
-	pairs 
-		add: anAssociation key 
-		withOccurrences: anAssociation value negated.
-	(pairs occurrencesOf: anAssociation key) = 0 
-		ifTrue: [ pairs removeKey: anAssociation key ifAbsent: []]
 ]
 
 { #category : 'accessing' }

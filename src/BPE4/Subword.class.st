@@ -62,23 +62,6 @@ Subword >> addPairsScoreWith: aSubword in: aBPE [
 
 ]
 
-{ #category : 'build' }
-Subword >> buildPairFrom: aLink in: aBPE [
-	"création d'une paire à partir d'un link et ajout du paire créée dans l'objet aBPE"
-	
-	aLink ifNil: [ ^ self ].
-	aLink value buildPairWith: aLink in: aBPE	
-	
-]
-
-{ #category : 'build' }
-Subword >> buildPairWith: aLink in: aBPE [
-	"Construit et enregistre dans le BPE la paire formée à partir du nœud donné, ainsi que sa position dans la liste chaînée."
-	
-	aBPE collectPairFrom: aLink
-	
-]
-
 { #category : 'comparing' }
 Subword >> hash [
     ^ self subword hash
@@ -162,19 +145,6 @@ Subword >> tryUpdatePairWith: aSubword in: aBPE [
 	aSubword ifNil: [ ^self ].
 	aSubword updatePairWith: self in: aBPE
 	
-]
-
-{ #category : 'update' }
-Subword >> updatePairAt: aNode in: aBPE [
-"Met à jour les informations de la paire correspondant au nœud donné dans l'objet aBPE."
-	aBPE updatePairFrom: aNode 
-]
-
-{ #category : 'update' }
-Subword >> updatePairFromNode: aNode in: aBPE [
-"Met à jour la paire correspondant au nœud donné dans l'objet aBPE."
-	aNode ifNil: [ ^self ].
-	aNode value updatePairAt: aNode in: aBPE .
 ]
 
 { #category : 'operations' }

@@ -30,16 +30,6 @@ EndOfWord >> addPairsScoreWith: aSubword in: aBPE [
 	^ self
 ]
 
-{ #category : 'build' }
-EndOfWord >> buildPairFrom: aNode in: aBPE [
-	^self
-]
-
-{ #category : 'build' }
-EndOfWord >> buildPairWith: aLink in: aBPE [
-	^self
-]
-
 { #category : 'operations' }
 EndOfWord >> tryAddPairAffectedByMergeWith: anObject in: aBPE [
 	
@@ -59,16 +49,6 @@ EndOfWord >> tryAddPairsScoreWith: anObject in: aBPE [
 { #category : 'operations' }
 EndOfWord >> tryUpdatePairWith: anObject in: aBPE [
 	^ self 
-]
-
-{ #category : 'update' }
-EndOfWord >> updatePairAt: aNode in: aBPE [
-	^self
-]
-
-{ #category : 'update' }
-EndOfWord >> updatePairFromNode: aNode in: aBPE [
-	^self
 ]
 
 { #category : 'operations' }
