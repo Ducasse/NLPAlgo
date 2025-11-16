@@ -6,6 +6,57 @@ Class {
 }
 
 { #category : 'tests' }
+TestWordPieceLearner >> testAddNewPairsScoresFrom [ 
+	|wordpiece subword subword1 |
+	wordpiece := WordPieceLearner new.
+	
+	self assert: wordpiece pairs size equals: 0.
+	self assert: wordpiece pairPositions size equals: 0.
+	self assert: wordpiece pairsScores size equals: 0.
+	
+	subword := Subword new subword: 'l'; occurence: 2; position: 1.
+	subword1 := Subword new subword: 'd'; occurence: 3; position: 4.
+	wordpiece addNewPairFrom: subword and: subword1 .
+	wordpiece addToLettersAndLettersPositions: subword .
+	wordpiece addToLettersAndLettersPositions: subword1 .
+	
+	self assert: (wordpiece pairs occurrencesOf: #('l' 'd')) equals: 2.
+	self assert: (wordpiece pairPositions at: #('l' 'd')) equals: #(#(1 4))asSet .
+	self assert: (wordpiece pairsScores size) equals: 0.
+	self assert: (wordpiece letters occurrencesOf: 'l') equals: 2.
+	self assert: (wordpiece letters occurrencesOf: 'd') equals: 3.
+	self assert: (wordpiece lettersPositions at: 'l') equals: #(1)asSet.
+	self assert: (wordpiece lettersPositions at: 'd') equals: #(4)asSet.
+	
+	wordpiece addNewPairsScoresFrom: subword and: subword1 .
+	
+	self assert: (wordpiece pairsScores at: #('l' 'd')) equals: 2/(2*3)asFloat.
+	
+
+]
+
+{ #category : 'tests' }
+TestWordPieceLearner >> testAddToLettersAndLettersPosition [ 
+	|wordpiece subword|
+	wordpiece := WordPieceLearner new.
+	
+	self assert: wordpiece letters size equals: 0.
+	self assert: wordpiece lettersPositions size equals: 0.
+	
+	subword := Subword new subword: 'l'; occurence: 1; position: 0.
+	wordpiece addToLettersAndLettersPositions: subword .
+	
+	self assert: (wordpiece letters occurrencesOf: 'l') equals: 1.
+	self assert: (wordpiece lettersPositions at: 'l') equals: #(0) asSet.
+	
+	subword := Subword new subword: 'l'; occurence: 2; position: 3.
+	wordpiece addToLettersAndLettersPositions: subword .
+	
+	self assert: (wordpiece letters occurrencesOf: 'l') equals: 3.
+	self assert: (wordpiece lettersPositions at: 'l') equals: #(0 3) asSet.
+]
+
+{ #category : 'tests' }
 TestWordPieceLearner >> testComputePairs [ 
 	|wordpiece|
 	wordpiece := WordPieceLearner new.
@@ -199,6 +250,22 @@ TestWordPieceLearner >> testMergeOneStepRecomputePairs [
 	self assert: (wordpiece pairsScores at: #('#s' '#t')) equals: 9/(9*9)asFloat .
 	self assert: (wordpiece pairsScores at: #('w' '#id')) equals: 3/(3*3)asFloat .
 	self assert: (wordpiece pairsScores at: #('#id' '#e')) equals: 3/(3*17)asFloat .
+]
+
+{ #category : 'tests' }
+TestWordPieceLearner >> testPairsAffectedByMerge [ 
+	|wordpiece pair|
+	
+	wordpiece := WordPieceLearner new.
+	wordpiece fromText: self text2 .
+	pair:= #('#o' '#w').
+	
+	wordpiece pairsAffectedByMerging: pair .
+	
+	self assert: wordpiece affectedPairSet equals: #(#('l' '#o') #('#w' '#e') #('#e' '#w') #('#w' '#e'))asSet .
+	
+	
+	
 ]
 
 { #category : 'tests' }
@@ -560,6 +627,30 @@ TestWordPieceLearner >> testUpdateAfterThreeMergeOneStepRecomputePairs [
 	self assert: (wordpiece pairsScores at: #('#e' '#s')) equals: 9/(17*9)asFloat .
 	self assert: (wordpiece pairsScores at: #('#s' '#t')) equals: 9/(9*9)asFloat .
 	self assert: (wordpiece pairsScores at: #('wid' '#e')) equals: 3/(3*17)asFloat .
+]
+
+{ #category : 'tests' }
+TestWordPieceLearner >> testUpdateToLettersAndLettersPosition [ 
+	|wordpiece subword|
+	wordpiece := WordPieceLearner new.
+	
+	self assert: wordpiece letters size equals: 0.
+	self assert: wordpiece lettersPositions size equals: 0.
+	
+	subword := Subword new subword: 'l'; occurence: 1; position: 0.
+	wordpiece addToLettersAndLettersPositions: subword .
+	
+	subword := Subword new subword: 'l'; occurence: 2; position: 3.
+	wordpiece addToLettersAndLettersPositions: subword .
+	
+	self assert: (wordpiece letters occurrencesOf: 'l') equals: 3.
+	self assert: (wordpiece lettersPositions at: 'l') equals: #(0 3) asSet.
+	
+	subword := Subword new subword: 'l'; occurence: 1; position: 0.
+	wordpiece updateLettersAndLettersPositions: subword .
+	
+	self assert: (wordpiece letters occurrencesOf: 'l') equals: 2.
+	self assert: (wordpiece lettersPositions at: 'l') equals: #(3) asSet.
 ]
 
 { #category : 'accessing structure variables' }

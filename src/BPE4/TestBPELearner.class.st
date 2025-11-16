@@ -11,6 +11,48 @@ TestBPELearner >> rawCorpus [
 ]
 
 { #category : 'tests' }
+TestBPELearner >> testAddNewPairFrom [ 
+	|bpe subword subword1 subword2 subword3|
+	bpe:= BPELearner new.
+	
+	subword := Subword new subword: 'a'; occurence: 5; position: 1.
+	subword1 := Subword new subword: 'b'; occurence: 5; position: 2.
+	bpe addNewPairFrom: subword and: subword1 .
+	
+	self assert: bpe pairs size  equals: 5.
+	self assert: (bpe pairs occurrencesOf: #(#a #b))  equals: 5. 
+	self assert: (bpe pairPositions at:#(#a #b) ) size equals: 1.
+	
+	subword2 := Subword new subword: 'c'; occurence: 1; position: 0.
+	subword3 := Subword new subword: 'd'; occurence: 2; position: 3.
+	bpe addNewPairFrom: subword2 and: subword3 .
+	
+	self assert: bpe pairs size  equals: 6.
+	self assert: (bpe pairs occurrencesOf: #(#c #d))  equals: 1.
+	self assert: (bpe pairPositions at:#(#c #d) ) size equals: 1.
+	
+	subword := Subword new subword: 'a'; occurence: 5; position: 1.
+	subword1 := Subword new subword: 'b'; occurence: 5; position: 2.
+	bpe addNewPairFrom: subword and: subword1 .
+	
+	self assert: bpe pairs size  equals: 11.
+	self assert: (bpe pairs occurrencesOf: #(#a #b))  equals: 10.
+	self assert: (bpe pairPositions at:#(#a #b) ) size equals: 1.
+	
+	subword := Subword new subword: 'a'; occurence: 3; position: 4.
+	subword1 := Subword new subword: 'b'; occurence: 3; position: 5.
+	bpe addNewPairFrom: subword and: subword1 .
+	
+	self assert: bpe pairs size  equals: 14.
+	self assert: (bpe pairs occurrencesOf: #(#a #b))  equals: 13.
+	self assert: (bpe pairPositions at:#(#a #b) ) size equals: 2.
+	
+	
+	
+	
+]
+
+{ #category : 'tests' }
 TestBPELearner >> testBuildVocabularyProducesCorrectVocabulary [
 
 	| enc |
@@ -325,6 +367,38 @@ TestBPELearner >> testUpdate [
 	self assert: (bpe pairPositions includesKey: #('ld' 'e')) equals: true.
 	 
 
+]
+
+{ #category : 'tests' }
+TestBPELearner >> testUpdatePairFrom [ 
+	|bpe subword subword1|
+	bpe:= BPELearner new.
+	
+	subword := Subword new subword: 'a'; occurence: 5; position: 1.
+	subword1 := Subword new subword: 'b'; occurence: 5; position: 2.
+	bpe addNewPairFrom: subword and: subword1 .
+	
+	subword := Subword new subword: 'a'; occurence: 3; position: 3.
+	subword1 := Subword new subword: 'b'; occurence: 3; position: 4.
+	bpe addNewPairFrom: subword and: subword1 .
+	
+	self assert: bpe pairs size  equals: 8.
+	self assert: (bpe pairs occurrencesOf: #(#a #b))  equals: 8. 
+	self assert: (bpe pairPositions at:#(#a #b) ) equals: #(#(1 2) #(3 4))asSet .
+	
+	subword := Subword new subword: 'a'; occurence: 5; position: 1.
+	subword1 := Subword new subword: 'b'; occurence: 5; position: 2.
+	bpe updatePairFrom: subword and: subword1 .
+	
+	self assert: bpe pairs size  equals: 3.
+	self assert: (bpe pairs occurrencesOf: #(#a #b))  equals: 3. 
+	self assert: (bpe pairPositions at:#(#a #b) ) equals: #(#(3 4))asSet .
+	
+	
+	
+	
+	
+	
 ]
 
 { #category : 'ressources' }

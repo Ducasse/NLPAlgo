@@ -96,6 +96,7 @@ WordPieceLearner >> initialize [
 	pairsScores := Dictionary new.
 	letters := Bag new.
 	lettersPositions := Dictionary new.
+	affectedPairSet := Set new .
 ]
 
 { #category : 'accessing' }
@@ -162,7 +163,7 @@ en préfixant le premier caractère tel quel et en ajoutant un '#' devant chaque
 { #category : 'update' }
 WordPieceLearner >> update: aPair [
 	| position|
-	affectedPairSet := Set new. "initialiser affectedPairSet à chaque mises à jours car elle change à chaque mises à jours."
+	affectedPairSet removeAll . "initialiser affectedPairSet à chaque mises à jours car elle change à chaque mises à jours."
 	self pairsAffectedByMerging: aPair . "ajoute toutes paires affectée par la fusion dans affectedPairSet."
 	position := pairPositions at: aPair . "récupère la position de chacun des éléments du paire fusionnée dans le texte."
 	
