@@ -115,6 +115,12 @@ BPELearner >> initialize [
 	merges:= OrderedCollection new
 ]
 
+{ #category : 'as yet unclassified' }
+BPELearner >> loadMergesSTON: filePath [
+    ^ STON fromString: (filePath asFileReference contents)
+
+]
+
 { #category : 'accessing' }
 BPELearner >> merges [ 
 	^merges 
@@ -173,6 +179,14 @@ BPELearner >> pretokenizeText:aText [
 	
 ]
 
+{ #category : 'as yet unclassified' }
+BPELearner >> saveMergesSTON: filePath [
+    | json |
+    json := STON toString: merges.   "merges est ton OrderedCollection"
+    filePath asFileReference writeStreamDo: [:s | s nextPutAll: json].
+
+]
+
 { #category : 'operations' }
 BPELearner >> splitWord: aString [
 "Transforme la chaîne passée en argument en une collection de caractères (chaque caractère converti en chaîne), 
@@ -191,7 +205,7 @@ BPELearner >> update: pair [
 	"Met à jour toutes les occurrences, les positions d’une paire donnée et ses voisines dans la liste chaînée, effectue la fusion, et ajout de nouvelles paires."
 	| position |
 	position := pairPositions at: pair.
-	position do: [ :each |
+	position do: [ :each |  
 			each first value
 				tryUpdatePairWith: each first previousLink value 
 				in: self.
