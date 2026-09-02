@@ -4,8 +4,8 @@ Class {
 	#classVars : [
 		'UniqueInstance'
 	],
-	#category : 'BPE4',
-	#package : 'BPE4'
+	#category : 'Tokenizer',
+	#package : 'Tokenizer'
 }
 
 { #category : 'instance creation' }
@@ -20,14 +20,14 @@ EndOfWord >> addPairAffectedByMergeWith: aSubword in: aBPE [
 ]
 
 { #category : 'operations' }
-EndOfWord >> addPairWith: anObject in: aBPE [
-	^ self 
-	
+EndOfWord >> addPairsScoreWith: aSubword in: aBPE [
+	^ self
 ]
 
 { #category : 'operations' }
-EndOfWord >> addPairsScoreWith: aSubword in: aBPE [
-	^ self
+EndOfWord >> createPairWith: anObject in: aBPE [
+	^ self 
+	
 ]
 
 { #category : 'operations' }
@@ -37,17 +37,17 @@ EndOfWord >> tryAddPairAffectedByMergeWith: anObject in: aBPE [
 ]
 
 { #category : 'operations' }
-EndOfWord >> tryAddPairWith: anObject in: aBPE [
-	^ self 
-]
-
-{ #category : 'operations' }
 EndOfWord >> tryAddPairsScoreWith: anObject in: aBPE [
 	^ self 
 ]
 
 { #category : 'operations' }
-EndOfWord >> tryUpdatePairWith: anObject in: aBPE [
+EndOfWord >> tryToCreatePairWith: anObject in: aBPE [
+	^ self 
+]
+
+{ #category : 'operations' }
+EndOfWord >> tryToUpdatePairWith: anObject in: aBPE [
 	^ self 
 ]
 

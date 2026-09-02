@@ -1,6 +1,6 @@
 Extension { #name : 'CTAbstractTrieNode' }
 
-{ #category : '*BPE4' }
+{ #category : '*Tokenizer' }
 CTAbstractTrieNode >> parent [ 
 
 	^ parent 

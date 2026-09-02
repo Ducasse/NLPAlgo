@@ -7,6 +7,6 @@
 Class {
 	#name : 'Todo',
 	#superclass : 'Object',
-	#category : 'BPE4',
-	#package : 'BPE4'
+	#category : 'Tokenizer',
+	#package : 'Tokenizer'
 }

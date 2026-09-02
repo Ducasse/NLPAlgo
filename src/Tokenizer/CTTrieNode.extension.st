@@ -1,6 +1,6 @@
 Extension { #name : 'CTTrieNode' }
 
-{ #category : '*BPE4' }
+{ #category : '*Tokenizer' }
 CTTrieNode >> addChildWithLetter: aCharacter [
 	| newTrie |
 	
@@ -12,7 +12,7 @@ CTTrieNode >> addChildWithLetter: aCharacter [
 	^newTrie
 ]
 
-{ #category : '*BPE4' }
+{ #category : '*Tokenizer' }
 CTTrieNode >> parent: aCTTrieNode [
 
 	parent := aCTTrieNode 
